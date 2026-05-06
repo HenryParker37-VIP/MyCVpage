@@ -85,6 +85,7 @@
   }
   .avatar-ring {
     width: 150px; height: 150px;
+    aspect-ratio: 1 / 1;
     border-radius: 50%;
     border: 3px solid #3B82F6;
     padding: 0;
@@ -93,9 +94,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
   .avatar-ring img {
     width: 100%; height: 100%;
+    aspect-ratio: 1 / 1;
     border-radius: 50%;
     object-fit: cover;
     object-position: center;
@@ -712,8 +715,10 @@ function updateEditorPreview() {
   const posX = (50 + parseInt(panX)) + '%';
   const posY = (50 + parseInt(panY)) + '%';
 
-  img.style.width = zoom + '%';
-  img.style.height = zoom + '%';
+  img.style.minWidth = zoom + '%';
+  img.style.minHeight = zoom + '%';
+  img.style.width = 'auto';
+  img.style.height = 'auto';
   img.style.objectPosition = posX + ' ' + posY;
 
   document.getElementById('zoom-value').textContent = zoom;
@@ -734,8 +739,10 @@ function applyAvatarEdits() {
   const posX = (50 + parseInt(panX)) + '%';
   const posY = (50 + parseInt(panY)) + '%';
 
-  img.style.width = zoom + '%';
-  img.style.height = zoom + '%';
+  img.style.minWidth = zoom + '%';
+  img.style.minHeight = zoom + '%';
+  img.style.width = 'auto';
+  img.style.height = 'auto';
   img.style.objectPosition = posX + ' ' + posY;
 
   localStorage.setItem('cv_avatar', currentAvatarData);
@@ -914,8 +921,10 @@ window.addEventListener('DOMContentLoaded', () => {
     const panX = localStorage.getItem('cv_avatar_pan_x');
     const panY = localStorage.getItem('cv_avatar_pan_y');
     if (zoom) {
-      img.style.width = zoom + '%';
-      img.style.height = zoom + '%';
+      img.style.minWidth = zoom + '%';
+      img.style.minHeight = zoom + '%';
+      img.style.width = 'auto';
+      img.style.height = 'auto';
       const posX = (50 + parseInt(panX || 0)) + '%';
       const posY = (50 + parseInt(panY || 0)) + '%';
       img.style.objectPosition = posX + ' ' + posY;
