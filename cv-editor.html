@@ -282,6 +282,98 @@
 
   /* Drag-over hint */
   .avatar-ring.dragover { border-color: #60A5FA; }
+
+  /* Avatar Editor Modal */
+  #avatar-editor {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+    align-items: center; justify-content: center;
+  }
+  #avatar-editor.show { display: flex; }
+  .editor-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .editor-title {
+    font-size: 18px; font-weight: 700;
+    color: #1C2541; margin-bottom: 20px;
+  }
+  .preview-box {
+    width: 200px; height: 200px;
+    margin: 0 auto 24px;
+    border: 2px solid #e5e7eb;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .control-group {
+    margin-bottom: 18px;
+  }
+  .control-label {
+    font-size: 13px; font-weight: 600;
+    color: #374151; margin-bottom: 8px;
+    display: block;
+  }
+  .control-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #2563EB;
+    cursor: pointer;
+  }
+  .control-slider::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #2563EB;
+    cursor: pointer;
+    border: none;
+  }
+  .control-value {
+    font-size: 12px; color: #6b7280;
+    text-align: center; margin-top: 6px;
+  }
+  .editor-actions {
+    display: flex; gap: 12px;
+    margin-top: 24px;
+  }
+  .editor-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer;
+    transition: all .15s;
+  }
+  .editor-btn.cancel {
+    background: #f3f4f6; color: #374151;
+  }
+  .editor-btn.cancel:hover { background: #e5e7eb; }
+  .editor-btn.apply {
+    background: #2563EB; color: #fff;
+  }
+  .editor-btn.apply:hover { background: #1d4ed8; }
 </style>
 </head>
 <body>
@@ -316,6 +408,40 @@
         </div>
       </div>
       <input type="file" id="avatar-input" accept="image/*" onchange="handleAvatarUpload(event)" />
+    </div>
+
+    <!-- Avatar Editor Modal -->
+    <div id="avatar-editor">
+      <div class="editor-panel">
+        <div class="editor-title">Adjust Avatar Image</div>
+
+        <div class="preview-box">
+          <img id="editor-preview" class="preview-img" />
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Zoom</label>
+          <input type="range" id="zoom-slider" class="control-slider" min="80" max="200" value="100" />
+          <div class="control-value"><span id="zoom-value">100</span>%</div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Left/Right</label>
+          <input type="range" id="pan-x-slider" class="control-slider" min="-50" max="50" value="0" />
+          <div class="control-value"><span id="pan-x-value">0</span>px</div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Up/Down</label>
+          <input type="range" id="pan-y-slider" class="control-slider" min="-50" max="50" value="0" />
+          <div class="control-value"><span id="pan-y-value">0</span>px</div>
+        </div>
+
+        <div class="editor-actions">
+          <button class="editor-btn cancel" onclick="closeAvatarEditor()">Cancel</button>
+          <button class="editor-btn apply" onclick="applyAvatarEdits()">Apply</button>
+        </div>
+      </div>
     </div>
 
     <!-- Contact -->
@@ -557,7 +683,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-/* ── Avatar Upload ── */
+/* ── Avatar Upload & Editor ── */
+let currentAvatarData = null;
 function triggerUpload() {
   document.getElementById('avatar-input').click();
 }
@@ -566,11 +693,46 @@ function handleAvatarUpload(e) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(ev) {
-    document.getElementById('avatar-img').src = ev.target.result;
-    localStorage.setItem('cv_avatar', ev.target.result);
+    currentAvatarData = ev.target.result;
+    document.getElementById('editor-preview').src = currentAvatarData;
+    document.getElementById('zoom-slider').value = 100;
+    document.getElementById('pan-x-slider').value = 0;
+    document.getElementById('pan-y-slider').value = 0;
+    updateEditorPreview();
+    document.getElementById('avatar-editor').classList.add('show');
   };
   reader.readAsDataURL(file);
 }
+function updateEditorPreview() {
+  const zoom = document.getElementById('zoom-slider').value;
+  const panX = document.getElementById('pan-x-slider').value;
+  const panY = document.getElementById('pan-y-slider').value;
+  const img = document.getElementById('editor-preview');
+  img.style.transform = `scale(${zoom/100}) translate(${panX}px, ${panY}px)`;
+  document.getElementById('zoom-value').textContent = zoom;
+  document.getElementById('pan-x-value').textContent = panX;
+  document.getElementById('pan-y-value').textContent = panY;
+}
+function closeAvatarEditor() {
+  document.getElementById('avatar-editor').classList.remove('show');
+  currentAvatarData = null;
+}
+function applyAvatarEdits() {
+  const zoom = document.getElementById('zoom-slider').value;
+  const panX = document.getElementById('pan-x-slider').value;
+  const panY = document.getElementById('pan-y-slider').value;
+  const img = document.getElementById('avatar-img');
+  img.src = currentAvatarData;
+  img.style.transform = `scale(${zoom/100}) translate(${panX}px, ${panY}px)`;
+  localStorage.setItem('cv_avatar', currentAvatarData);
+  localStorage.setItem('cv_avatar_zoom', zoom);
+  localStorage.setItem('cv_avatar_pan_x', panX);
+  localStorage.setItem('cv_avatar_pan_y', panY);
+  closeAvatarEditor();
+}
+document.getElementById('zoom-slider')?.addEventListener('input', updateEditorPreview);
+document.getElementById('pan-x-slider')?.addEventListener('input', updateEditorPreview);
+document.getElementById('pan-y-slider')?.addEventListener('input', updateEditorPreview);
 
 /* Drag & drop on avatar */
 const ring = document.getElementById('avatar-ring');
@@ -686,6 +848,9 @@ function saveData() {
   localStorage.setItem('cv_content', html);
   const avatar = document.getElementById('avatar-img').src;
   if (avatar && !avatar.includes('svg+xml')) localStorage.setItem('cv_avatar', avatar);
+  const avatarImg = document.getElementById('avatar-img');
+  const transform = avatarImg.style.transform;
+  if (transform) localStorage.setItem('cv_avatar_transform', transform);
   showToast('Saved!');
 }
 
@@ -731,7 +896,11 @@ window.addEventListener('DOMContentLoaded', () => {
     renderAllQR();
   }
   const avatar = localStorage.getItem('cv_avatar');
-  if (avatar && document.getElementById('avatar-img')) document.getElementById('avatar-img').src = avatar;
+  if (avatar && document.getElementById('avatar-img')) {
+    document.getElementById('avatar-img').src = avatar;
+    const transform = localStorage.getItem('cv_avatar_transform');
+    if (transform) document.getElementById('avatar-img').style.transform = transform;
+  }
 });
 </script>
 </body>
