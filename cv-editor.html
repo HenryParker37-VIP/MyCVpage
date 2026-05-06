@@ -708,7 +708,14 @@ function updateEditorPreview() {
   const panX = document.getElementById('pan-x-slider').value;
   const panY = document.getElementById('pan-y-slider').value;
   const img = document.getElementById('editor-preview');
-  img.style.transform = `scale(${zoom/100}) translate(${panX}px, ${panY}px)`;
+
+  const posX = (50 + parseInt(panX)) + '%';
+  const posY = (50 + parseInt(panY)) + '%';
+
+  img.style.width = zoom + '%';
+  img.style.height = zoom + '%';
+  img.style.objectPosition = posX + ' ' + posY;
+
   document.getElementById('zoom-value').textContent = zoom;
   document.getElementById('pan-x-value').textContent = panX;
   document.getElementById('pan-y-value').textContent = panY;
@@ -723,7 +730,14 @@ function applyAvatarEdits() {
   const panY = document.getElementById('pan-y-slider').value;
   const img = document.getElementById('avatar-img');
   img.src = currentAvatarData;
-  img.style.transform = `scale(${zoom/100}) translate(${panX}px, ${panY}px)`;
+
+  const posX = (50 + parseInt(panX)) + '%';
+  const posY = (50 + parseInt(panY)) + '%';
+
+  img.style.width = zoom + '%';
+  img.style.height = zoom + '%';
+  img.style.objectPosition = posX + ' ' + posY;
+
   localStorage.setItem('cv_avatar', currentAvatarData);
   localStorage.setItem('cv_avatar_zoom', zoom);
   localStorage.setItem('cv_avatar_pan_x', panX);
@@ -848,9 +862,6 @@ function saveData() {
   localStorage.setItem('cv_content', html);
   const avatar = document.getElementById('avatar-img').src;
   if (avatar && !avatar.includes('svg+xml')) localStorage.setItem('cv_avatar', avatar);
-  const avatarImg = document.getElementById('avatar-img');
-  const transform = avatarImg.style.transform;
-  if (transform) localStorage.setItem('cv_avatar_transform', transform);
   showToast('Saved!');
 }
 
@@ -897,9 +908,18 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   const avatar = localStorage.getItem('cv_avatar');
   if (avatar && document.getElementById('avatar-img')) {
-    document.getElementById('avatar-img').src = avatar;
-    const transform = localStorage.getItem('cv_avatar_transform');
-    if (transform) document.getElementById('avatar-img').style.transform = transform;
+    const img = document.getElementById('avatar-img');
+    img.src = avatar;
+    const zoom = localStorage.getItem('cv_avatar_zoom');
+    const panX = localStorage.getItem('cv_avatar_pan_x');
+    const panY = localStorage.getItem('cv_avatar_pan_y');
+    if (zoom) {
+      img.style.width = zoom + '%';
+      img.style.height = zoom + '%';
+      const posX = (50 + parseInt(panX || 0)) + '%';
+      const posY = (50 + parseInt(panY || 0)) + '%';
+      img.style.objectPosition = posX + ' ' + posY;
+    }
   }
 });
 </script>
